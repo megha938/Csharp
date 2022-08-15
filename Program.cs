@@ -1,115 +1,88 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
-namespace PreparingBreakFast
+namespace ObserverAssignment
 {
-    internal class Bacon { }
-    internal class Coffee { }
-    internal class Egg { }
-    internal class Juice { }
-    internal class Toast { }
-
-    internal class BreakFastDemo
+    public class Window
     {
-        private static Juice PourOJ()
+        Button _clearButton;
+        TextBox _searchTextBox;
+
+        public Window()
         {
-            Console.WriteLine($"Thread : {Thread.CurrentThread.ManagedThreadId}  Pouring Mango juice");
-            return new Juice();
+            _clearButton = new Button();
+            _searchTextBox = new TextBox();
+            _clearButton.AddObserver(new Action(ClearButton_Click));
         }
 
-        private static void ApplyJam(Toast toast) =>
-         Console.WriteLine($"Thread : {Thread.CurrentThread.ManagedThreadId} Putting jam on the toast");
-
-        private static void ApplyButter(Toast toast) =>
-            Console.WriteLine($"Thread : {Thread.CurrentThread.ManagedThreadId}  Putting butter on the toast");
-
-        private static Toast ToastBread(int slices)
+        public void Show()
         {
-            for (int slice = 0; slice < slices; slice++)
-            {
-                Console.WriteLine($"Thread : {Thread.CurrentThread.ManagedThreadId} Putting a slice of bread in the toaster :");
-            }
-            Console.WriteLine($"Thread : {Thread.CurrentThread.ManagedThreadId}  Preparing....");
-            Task.Delay(4000).Wait();
-            Console.WriteLine($"Thread : {Thread.CurrentThread.ManagedThreadId} Remove toast from toaster");
-
-            return new Toast();
+            Console.WriteLine("Window Painted");
         }
 
-        private static Task<Toast> ToastBreadAsync(int slices)
+        private void ClearButton_Click()
         {
-            return Task.Run<Toast>(() => { return ToastBread(slices); });
+            _searchTextBox.Clear();
         }
 
-        private static Task<Bacon> FryBaconAsync(int slices)
+        public void ButtonClickSimulation()
         {
-            return Task.Run<Bacon>(async () => {
-                Console.WriteLine($"Thread : {Thread.CurrentThread.ManagedThreadId} putting {slices} slices of bacon in the pan");
-                Console.WriteLine($"Thread : {Thread.CurrentThread.ManagedThreadId}  preparing first side of bacon");
-                await Task.Delay(4000);
-                for (int slice = 0; slice < slices; slice++)
-                {
-                    Console.WriteLine($"Thread : {Thread.CurrentThread.ManagedThreadId}  flipping a slice of bacon");
-                }
-                Console.WriteLine($"Thread : {Thread.CurrentThread.ManagedThreadId} preparing second side of bacon");
-                await Task.Delay(4000);
-                Console.WriteLine($"Thread : {Thread.CurrentThread.ManagedThreadId} Put bacon on plate");
-                return new Bacon();
-            });
-        }
-
-        private static Task<Egg> FryEggsAsync(int howMany)
-        {
-            return Task.Run<Egg>(async () => {
-                Console.WriteLine($"Thread : {Thread.CurrentThread.ManagedThreadId} Warming the egg pan");
-                await Task.Delay(4000);
-                Console.WriteLine($"Thread : {Thread.CurrentThread.ManagedThreadId}  cracking {howMany} eggs");
-                Console.WriteLine($"Thread: {Thread.CurrentThread.ManagedThreadId} cooking the eggs");
-                await Task.Delay(4000);
-                Console.WriteLine($"Thread : {Thread.CurrentThread.ManagedThreadId}  Putting eggs on the plate");
-                return new Egg();
-            });
-        }
-
-        private static Coffee PourCoffee()
-        {
-            Console.WriteLine($"Thread : {Thread.CurrentThread.ManagedThreadId} Pouring coffee");
-            return new Coffee();
-        }
-
-        public static async Task PrepareBreakfast()
-        {
-            Coffee cup = PourCoffee();
-            Console.WriteLine("coffee ready");
-
-
-            await Task.WhenAll(FryEggsAsync(2), FryBaconAsync(2));
-
-            Toast toast = await ToastBreadAsync(2);
-            ApplyButter(toast);
-            ApplyJam(toast);
-            Console.WriteLine("toast is ready");
-
-            Juice j = PourOJ();
-            Console.WriteLine("juice is ready");
-            Console.WriteLine("Breakfast is ready!");
+            _clearButton.OnClick();
         }
     }
 
-    class Program
+   
+    public class Button
     {
-        async static Task Main(string[] args)
+        Action Observer;
+
+        public void OnClick()
         {
-            System.Diagnostics.Stopwatch _watch = new System.Diagnostics.Stopwatch();
-            _watch.Start();
-            await BreakFastDemo.PrepareBreakfast();
-            _watch.Stop();
-            Console.WriteLine($"Total time taken to prepare breakfast {_watch.Elapsed.TotalSeconds}");
+            Console.WriteLine("Button clicked");
+            this.NotifyObserver();
+        }
+
+        public void AddObserver(Action observer)
+        {
+            Observer += observer;
+        }
+
+        public void RemoveObserver(Action observer)
+        {
+            Observer -= observer;
+        }
+
+        private void NotifyObserver()
+        {
+            if (Observer != null)
+            {
+                Observer.Invoke();
+            }
+        }
+    }
+
+    public class TextBox
+    {
+        public void Clear()
+        {
+            Console.WriteLine("Cleared textbox content");
+        }
+    }
+
+    internal class Observer
+    {
+        static void Main()
+        {
+            Window _window = new Window();
+            _window.Show();
+            while (true)
+            {
+                _window.ButtonClickSimulation();
+                System.Threading.Thread.Sleep(1000);
+            }
         }
     }
 }
